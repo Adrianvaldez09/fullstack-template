@@ -48,19 +48,20 @@ func RequireAuth(c *gin.Context) {
 		}
 
 		// Attach user to context
-		var currentUser = gin.H{
-			"id":        user.ID,
-			"username":  user.Username,
-			"firstName": user.FirstName,
-			"lastName":  user.LastName,
-			"email":     user.Email,
-			"createdAt": user.CreatedAt,
-			"updatedAt": user.UpdatedAt,
-			"deletedAt": user.DeletedAt,
-		}
+		// var currentUser = gin.H{
+		// 	"id":        user.ID,
+		// 	"username":  user.Username,
+		// 	"firstName": user.FirstName,
+		// 	"lastName":  user.LastName,
+		// 	"email":     user.Email,
+		// 	"createdAt": user.CreatedAt,
+		// 	"updatedAt": user.UpdatedAt,
+		// 	"deletedAt": user.DeletedAt,
+		// 	"plays":     user.Plays,
+		// }
 
 		// Continue to next handler
-		c.Set("currentUser", currentUser)
+		c.Set("currentUserId", user.ID)
 	} else {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return

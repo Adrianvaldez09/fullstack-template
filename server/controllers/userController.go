@@ -25,11 +25,11 @@ func Signup(c *gin.Context) {
 	}
 
 	// Bind request body to struct and validate
-	if c.Bind(&SignupInput) != nil {
+	if c.ShouldBindJSON(&SignupInput) != nil {
+		fmt.Println("Parsed input:", SignupInput)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	fmt.Println("Parsed input:", SignupInput)
 
 	// Hash the password
 	hash, err := bcrypt.GenerateFromPassword([]byte(SignupInput.Password), bcrypt.DefaultCost)
@@ -39,13 +39,13 @@ func Signup(c *gin.Context) {
 	}
 
 	// Create user
-
 	user := models.User{
 		Username:  SignupInput.Username,
 		FirstName: SignupInput.FirstName,
 		LastName:  SignupInput.LastName,
 		Email:     SignupInput.Email,
 		Password:  string(hash),
+		Plays:     []models.Play{},
 	}
 
 	result := database.DB.Create(&user)
@@ -67,7 +67,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Bind input to struct
-	if c.Bind(&LoginInput) != nil {
+	if c.ShouldBindJSON(&LoginInput) != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
@@ -113,9 +113,16 @@ func Login(c *gin.Context) {
 func ShowValidatedUser(c *gin.Context) {
 	fmt.Println("Validate endpoint hit")
 
-	currentUser, _ := c.Get("currentUser")
+	// currentUser, _ := c.Get("currentUser")
+	currentUserId, _ := c.Get("currentUserId")
 
-	c.JSON(http.StatusOK, gin.H{"currentUser": currentUser})
+	var user models.User
+	if err := database.DB.Preload("Plays").First(&user, currentUserId).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"currentUser": user})
 }
 
 func Logout(c *gin.Context) {
